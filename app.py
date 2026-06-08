@@ -1,6 +1,15 @@
 from fastapi import FastAPI, UploadFile
 from agent import transcribe_audio
 import shutil
+import os
+import shutil
+
+os.makedirs("uploads", exist_ok=True)
+
+file_path = f"uploads/{file.filename}"
+
+with open(file_path, "wb") as buffer:
+    shutil.copyfileobj(file.file, buffer)
 
 app = FastAPI()
 
