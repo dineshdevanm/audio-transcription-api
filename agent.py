@@ -56,8 +56,9 @@ def transcribe_audio(audio_path):
 
     segments, info = model.transcribe(
         wav_path,
-        beam_size=1,
-        vad_filter=True
+    beam_size=5,
+    vad_filter=True,
+    task="transcribe"
     )
 
     transcript = ""
