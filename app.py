@@ -14,6 +14,12 @@ def home():
         "message": "Audio Transcription API"
     }
 
+@app.get("/debug")
+def debug():
+    return {
+        "status": "ok",
+        "version": "v2"
+    }
 
 @app.post("/transcribe")
 async def transcribe(file: UploadFile = File(...)):
