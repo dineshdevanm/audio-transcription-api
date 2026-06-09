@@ -26,12 +26,18 @@ async def transcribe(file: UploadFile = File(...)):
         shutil.copyfileobj(file.file, buffer)
 
     try:
+        try:
+            result = transcribe_audio(temp_file.name)
+            return result
 
-        result = transcribe_audio(
-            temp_file.name
-        )
+        except Exception as e:
+            import traceback
 
-        return result
+            print("ERROR OCCURRED:")
+            print(traceback.format_exc())
+
+            return {
+            "error": str(e)}
 
     finally:
         try:
