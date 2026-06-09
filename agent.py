@@ -7,7 +7,7 @@ import time
 print("Loading Whisper model...")
 
 model = WhisperModel(
-    "tiny",
+    "base",
     device="cpu",
     compute_type="int8"
 )
