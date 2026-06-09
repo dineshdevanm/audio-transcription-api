@@ -7,7 +7,7 @@ import time
 print("Loading Whisper model...")
 
 model = WhisperModel(
-    "small",
+    "tiny",
     device="cpu",
     compute_type="int8"
 )
@@ -22,7 +22,7 @@ def convert_to_wav(input_path):
         delete=False
     )
 
-    subprocess.run(
+    result = subprocess.run(
         [
             "ffmpeg",
             "-y",
@@ -30,10 +30,18 @@ def convert_to_wav(input_path):
             input_path,
             wav_file.name
         ],
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-        check=True
+        capture_output=True,
+        text=True
     )
+
+    print("FFMPEG STDOUT:")
+    print(result.stdout)
+
+    print("FFMPEG STDERR:")
+    print(result.stderr)
+
+    if result.returncode != 0:
+        raise Exception(f"FFmpeg failed: {result.stderr}")
 
     return wav_file.name
 
