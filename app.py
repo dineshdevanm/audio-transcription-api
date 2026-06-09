@@ -23,31 +23,38 @@ def debug():
 
 @app.post("/transcribe")
 async def transcribe(file: UploadFile = File(...)):
-    temp_file = tempfile.NamedTemporaryFile(
-        delete=False,
-        suffix=os.path.splitext(file.filename)[1]
-    )
-    temp_file.close()
-    with open(temp_file.name, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
-
     try:
-        try:
-            result = transcribe_audio(temp_file.name)
-            return result
+        import tempfile
+        import shutil
+        import os
 
-        except Exception as e:
-            import traceback
+        print("Received:", file.filename)
 
-            print("ERROR OCCURRED:")
-            print(traceback.format_exc())
+        temp_file = tempfile.NamedTemporaryFile(
+            delete=False,
+            suffix=os.path.splitext(file.filename)[1]
+        )
+        temp_file.close()
 
-            return {
-            "error": str(e)}
+        with open(temp_file.name, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
 
-    finally:
-        try:
-            if os.path.exists(temp_file.name):
-                os.remove(temp_file.name)
-        except Exception as e:
-            print("Cleanup error:", e)
+        print("Saved:", temp_file.name)
+
+        result = transcribe_audio(temp_file.name)
+
+        print("Done")
+
+        return result
+
+    except Exception as e:
+        import traceback
+
+        error = traceback.format_exc()
+
+        print(error)
+
+        return {
+            "error": str(e),
+            "traceback": error
+        }
