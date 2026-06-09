@@ -1,28 +1,69 @@
 from faster_whisper import WhisperModel
+import subprocess
+import tempfile
+import os
 import time
+
+print("Loading Whisper model...")
+
+model = WhisperModel(
+    "small",
+    device="cpu",
+    compute_type="int8"
+)
+
+print("Whisper model loaded")
+
+
+def convert_to_wav(input_path):
+
+    wav_file = tempfile.NamedTemporaryFile(
+        suffix=".wav",
+        delete=False
+    )
+
+    subprocess.run(
+        [
+            "ffmpeg",
+            "-y",
+            "-i",
+            input_path,
+            wav_file.name
+        ],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        check=True
+    )
+
+    return wav_file.name
+
 
 def transcribe_audio(audio_path):
 
     start_time = time.time()
 
-    model = WhisperModel(
-        "base",
-        device="cpu",
-        compute_type="int8"
+    wav_path = convert_to_wav(audio_path)
+
+    print("Starting transcription...")
+
+    segments, info = model.transcribe(
+        wav_path,
+        beam_size=1,
+        vad_filter=True
     )
 
-    segments, info = model.transcribe(audio_path)
-
-    text = ""
+    transcript = ""
 
     for segment in segments:
-        text += segment.text + " "
+        transcript += segment.text + " "
 
-    end_time = time.time()
-
-    processing_time = round(end_time - start_time, 2)
+    os.remove(wav_path)
 
     return {
-        "transcript": text.strip(),
-        "processing_time_seconds": processing_time
+        "detected_language": info.language,
+        "transcript": transcript.strip(),
+        "processing_time_seconds": round(
+            time.time() - start_time,
+            2
+        )
     }

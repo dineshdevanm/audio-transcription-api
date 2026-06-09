@@ -1,26 +1,41 @@
-from fastapi import FastAPI, UploadFile
+from fastapi import FastAPI, UploadFile, File
 from agent import transcribe_audio
+import tempfile
 import shutil
 import os
 
 app = FastAPI()
 
-@app.post("/transcribe")
-async def transcribe(file: UploadFile):
-
-    os.makedirs("uploads", exist_ok=True)
-
-    file_path = f"uploads/{file.filename}"
-
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
-
-    result = transcribe_audio(file_path)
-
-    return result
 
 @app.get("/")
 def home():
     return {
-        "version": "NEW_VERSION_123"
+        "status": "running",
+        "message": "Audio Transcription API"
     }
+
+
+@app.post("/transcribe")
+async def transcribe(file: UploadFile = File(...)):
+    temp_file = tempfile.NamedTemporaryFile(
+        delete=False,
+        suffix=os.path.splitext(file.filename)[1]
+    )
+    temp_file.close()
+    with open(temp_file.name, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+
+    try:
+
+        result = transcribe_audio(
+            temp_file.name
+        )
+
+        return result
+
+    finally:
+        try:
+            if os.path.exists(temp_file.name):
+                os.remove(temp_file.name)
+        except Exception as e:
+            print("Cleanup error:", e)
